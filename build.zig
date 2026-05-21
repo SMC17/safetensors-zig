@@ -85,4 +85,20 @@ pub fn build(b: *std.Build) void {
     run_bench_rm.has_side_effects = true;
     const bench_rm_step = b.step("bench-realmodel", "Bench parse against real-model fixture");
     bench_rm_step.dependOn(&run_bench_rm.step);
+
+    // Profile-style breakdown of parse phases.
+    const bench_bd_mod = b.createModule(.{
+        .root_source_file = b.path("bench/bench_breakdown.zig"),
+        .target = target,
+        .optimize = .ReleaseFast,
+    });
+    bench_bd_mod.addImport("safetensors", mod);
+    const bench_bd_exe = b.addExecutable(.{
+        .name = "bench-breakdown",
+        .root_module = bench_bd_mod,
+    });
+    const run_bench_bd = b.addRunArtifact(bench_bd_exe);
+    run_bench_bd.has_side_effects = true;
+    const bench_bd_step = b.step("bench-breakdown", "Profile-style breakdown of parse phases");
+    bench_bd_step.dependOn(&run_bench_bd.step);
 }

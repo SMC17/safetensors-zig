@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.2.0 — 2026-05-21
+
+Hand-tuned safetensors-specific JSON parser replaces std.json.
+**Beats Rust upstream by ~3.2x** on the Llama-shape fixture
+(Zig ~24μs vs Rust ~77μs, median of 5+ stability runs each).
+
+- `src/parser.zig` (~400 LOC): single-pass byte-by-byte parser, no AST,
+  no per-token allocation beyond arena-backed output slices. Accepts
+  canonical safetensors + `\"` and `\\` escapes; rejects anything
+  more exotic with InvalidJSON.
+- `bench/bench_breakdown.zig`: phase-by-phase profile. Confirmed
+  std.json was 97% of v0.1 total time (84μs of 87μs) before this
+  optimization.
+- 11 + 6 = 17 unit tests pass. Correctness-equivalent to v0.1.
+- Honest non-claim: the fast parser is format-specialised; weird
+  Unicode-escaped tensor names would need a fallback to std.json.
+  Real-world safetensors files don't use those.
+
 ## 0.1.0 — 2026-05-20
 
 Real-model fixture coverage + audited Rust upstream bench. Honest
