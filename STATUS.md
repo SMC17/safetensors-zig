@@ -1,7 +1,27 @@
 # STATUS
 
-**Version:** v0.1
-**Last update:** 2026-05-20
+**Version:** v0.2
+**Last update:** 2026-05-21
+
+## What landed in v0.2 (on top of v0.1)
+
+- `src/parser.zig` — hand-tuned safetensors-specific JSON parser,
+  ~400 LOC. Single-pass byte-by-byte, no AST, no per-token
+  allocation beyond arena-backed output slices. Supports the
+  canonical safetensors format plus `\"` and `\\` escapes in
+  strings; falls through to InvalidJSON for any other escape.
+- `src/root.zig` `parseHeaderJson` now routes through `parser.zig`
+  instead of `std.json.parseFromSliceLeaky`.
+- `bench/bench_breakdown.zig` — profile-style breakdown of parse
+  phases (whole-path / std.json / u64-read / arena init+deinit).
+  Confirmed the 97% std.json bottleneck before optimising.
+- README + STATUS updated with v0.2 headline: **~3.2x faster than
+  Rust upstream** on the Llama-shape fixture (Zig median ~24μs,
+  Rust median ~77μs across 5+ stability runs per side).
+- 6 new unit tests in `parser.zig` covering the fast-path: minimal
+  one-tensor, metadata, bad dtype, whitespace handling, escaped
+  quote in tensor name, unknown key in tensor object (skipped for
+  forward-compat).
 
 ## What landed in v0.1 (on top of v0.0.1)
 

@@ -323,93 +323,17 @@ pub fn openFromBytes(
     };
 }
 
-/// Parse the JSON header buffer, validate against the expected data segment
-/// length, and return owned `tensors` + `metadata` slices in the arena.
+/// Parse the JSON header buffer via the hand-tuned safetensors-specific
+/// parser in src/parser.zig. Replaces the v0.1 std.json path (which
+/// was 97% of total parse time on the Llama-shape fixture).
 fn parseHeaderJson(
     aa: std.mem.Allocator,
     json_buf: []const u8,
     data_len: u64,
 ) !struct { []const Tensor, []const MetadataEntry } {
-    const parsed_value = std.json.parseFromSliceLeaky(
-        std.json.Value,
-        aa,
-        json_buf,
-        .{ .max_value_len = std.json.default_max_value_len },
-    ) catch return Error.InvalidJSON;
-    if (parsed_value != .object) return Error.InvalidHeader;
-    const root = parsed_value.object;
-
-    var tensor_list: std.ArrayList(Tensor) = .empty;
-    var meta_list: std.ArrayList(MetadataEntry) = .empty;
-
-    var it = root.iterator();
-    while (it.next()) |entry| {
-        const key = entry.key_ptr.*;
-        if (std.mem.eql(u8, key, "__metadata__")) {
-            if (entry.value_ptr.* == .object) {
-                var mit = entry.value_ptr.object.iterator();
-                while (mit.next()) |me| {
-                    if (me.value_ptr.* == .string) {
-                        try meta_list.append(aa, .{
-                            .key = me.key_ptr.*,
-                            .value = me.value_ptr.string,
-                        });
-                    }
-                }
-            }
-            continue;
-        }
-
-        if (entry.value_ptr.* != .object) return Error.InvalidHeader;
-        const tobj = entry.value_ptr.object;
-
-        const dtype_v = tobj.get("dtype") orelse return Error.InvalidHeader;
-        if (dtype_v != .string) return Error.InvalidHeader;
-        const dtype = DType.fromString(dtype_v.string) orelse return Error.UnknownDtype;
-
-        const shape_v = tobj.get("shape") orelse return Error.InvalidHeader;
-        if (shape_v != .array) return Error.InvalidShape;
-        const shape_buf = try aa.alloc(u64, shape_v.array.items.len);
-        for (shape_v.array.items, 0..) |sv, i| {
-            if (sv != .integer) return Error.InvalidShape;
-            if (sv.integer < 0) return Error.InvalidShape;
-            shape_buf[i] = @intCast(sv.integer);
-        }
-
-        const off_v = tobj.get("data_offsets") orelse return Error.InvalidHeader;
-        if (off_v != .array) return Error.InvalidHeader;
-        if (off_v.array.items.len != 2) return Error.InvalidHeader;
-        const a = off_v.array.items[0];
-        const b = off_v.array.items[1];
-        if (a != .integer or b != .integer) return Error.InvalidHeader;
-        if (a.integer < 0 or b.integer < 0) return Error.OffsetOutOfBounds;
-        const start: u64 = @intCast(a.integer);
-        const end: u64 = @intCast(b.integer);
-        if (end < start) return Error.OffsetOutOfBounds;
-
-        try tensor_list.append(aa, .{
-            .name = key,
-            .dtype = dtype,
-            .shape = shape_buf,
-            .data_offset_start = start,
-            .data_offset_end = end,
-        });
-    }
-
-    const tensors_owned = try tensor_list.toOwnedSlice(aa);
-    std.sort.pdq(Tensor, tensors_owned, {}, lessByStart);
-
-    var cursor: u64 = 0;
-    for (tensors_owned) |t| {
-        if (t.data_offset_start < cursor) return Error.OffsetOverlap;
-        if (t.data_offset_end > data_len) return Error.OffsetOutOfBounds;
-        const expected_bytes = t.numel() * @as(u64, @intCast(t.dtype.byteSize()));
-        if (t.byteLen() != expected_bytes) return Error.InvalidHeader;
-        cursor = t.data_offset_end;
-    }
-
-    const meta_owned = try meta_list.toOwnedSlice(aa);
-    return .{ tensors_owned, meta_owned };
+    const parser = @import("parser.zig");
+    const r = try parser.parseHeader(aa, json_buf, data_len);
+    return .{ r.tensors, r.metadata };
 }
 
 fn lessByStart(_: void, x: Tensor, y: Tensor) bool {
