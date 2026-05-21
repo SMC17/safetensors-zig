@@ -1,0 +1,7 @@
+zig-out/
+.zig-cache/
+*.safetensors
+!tests/fixtures/*.safetensors
+.DS_Store
+*~
+*.swp
