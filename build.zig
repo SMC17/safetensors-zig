@@ -37,6 +37,21 @@ pub fn build(b: *std.Build) void {
     const realmodel_step = b.step("test-realmodel", "Run real-model integration test only");
     realmodel_step.dependOn(&run_realmodel_tests.step);
 
+    // Real-world TinyLlama-1.1B integration test (2.2GB fixture).
+    const real_tl_mod = b.createModule(.{
+        .root_source_file = b.path("tests/test_realtinyllama.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    real_tl_mod.addImport("safetensors", mod);
+    const real_tl_tests = b.addTest(.{
+        .root_module = real_tl_mod,
+    });
+    const run_real_tl_tests = b.addRunArtifact(real_tl_tests);
+    test_step.dependOn(&run_real_tl_tests.step);
+    const real_tl_step = b.step("test-real-tinyllama", "Real TinyLlama-1.1B 2.2GB parse test");
+    real_tl_step.dependOn(&run_real_tl_tests.step);
+
     // Inspect CLI: `safetensors-inspect <file.safetensors>`.
     const inspect_mod = b.createModule(.{
         .root_source_file = b.path("examples/inspect.zig"),
