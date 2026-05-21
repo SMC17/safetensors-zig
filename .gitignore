@@ -1,7 +1,12 @@
 zig-out/
 .zig-cache/
 *.safetensors
-!tests/fixtures/*.safetensors
+tests/fixtures/*.safetensors
+bench/bench_rust/target/
+bench/bench_rust/Cargo.lock
+.venv/
 .DS_Store
 *~
 *.swp
+__pycache__/
+*.pyc
