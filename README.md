@@ -73,12 +73,11 @@ This is a pre-1.0 substrate per the Zig 0.16 ecosystem convention. No
 const std = @import("std");
 const safetensors = @import("safetensors");
 
-pub fn main() !void {
-    var gpa: std.heap.GeneralPurposeAllocator(.{}) = .init;
-    defer _ = gpa.deinit();
-    const alloc = gpa.allocator();
+pub fn main(init: std.process.Init) !void {
+    const alloc = init.gpa;
+    const io = init.io;
 
-    var st = try safetensors.SafeTensors.open(alloc, "model.safetensors");
+    var st = try safetensors.SafeTensors.open(alloc, io, "model.safetensors");
     defer st.deinit();
 
     for (st.tensors) |t| {
@@ -141,7 +140,7 @@ Requires Zig 0.16; the head-to-head bench additionally requires
 ## Position in the portfolio
 
 safetensors-zig is artifact #4 in the 8-artifact portfolio (see
-`~/portfolio/README.md`). It is a foundation block — every Zig artifact
+`the broader sovereign-stack portfolio`). It is a foundation block — every Zig artifact
 that loads model weights (vLLM-zig, mlx-nonapple) will depend on this.
 
 ## Licence
