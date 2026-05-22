@@ -72,44 +72,55 @@ const Cursor = struct {
         self.skipWhitespace();
         if ((self.next() orelse return Error.InvalidJSON) != '"') return Error.InvalidJSON;
         const start = self.pos;
-        var has_escape = false;
+
+        // Fast path: SIMD-accelerated scan for either `"` or `\\`.
+        // 99%+ of safetensors tensor-name strings have no escape; the
+        // happy path finds the closing `"` directly via indexOfAny
+        // which lowers to a vectorised byte search on x86_64 / aarch64.
+        const rest = self.src[self.pos..];
+        const first_special = std.mem.indexOfAny(u8, rest, "\"\\") orelse
+            return Error.InvalidJSON;
+        const abs_first = self.pos + first_special;
+        if (rest[first_special] == '"') {
+            @branchHint(.likely);
+            self.pos = abs_first + 1;
+            return self.src[start..abs_first];
+        }
+
+        // Slow path: has at least one escape, walk byte by byte.
+        self.pos = abs_first;
         while (self.pos < self.src.len) : (self.pos += 1) {
             const c = self.src[self.pos];
             if (c == '"') {
                 const end = self.pos;
                 self.pos += 1;
-                if (!has_escape) {
-                    return self.src[start..end];
-                } else {
-                    // Allocate a copy with escapes resolved
-                    var buf = try aa.alloc(u8, end - start);
-                    var w: usize = 0;
-                    var r: usize = start;
-                    while (r < end) {
-                        const b = self.src[r];
-                        if (b == '\\') {
-                            r += 1;
-                            if (r >= end) return Error.InvalidJSON;
-                            const esc = self.src[r];
-                            buf[w] = switch (esc) {
-                                '"' => '"',
-                                '\\' => '\\',
-                                '/' => '/',
-                                else => return Error.InvalidJSON,
-                            };
-                            w += 1;
-                            r += 1;
-                        } else {
-                            buf[w] = b;
-                            w += 1;
-                            r += 1;
-                        }
+                // Allocate a copy with escapes resolved
+                var buf = try aa.alloc(u8, end - start);
+                var w: usize = 0;
+                var r: usize = start;
+                while (r < end) {
+                    const b = self.src[r];
+                    if (b == '\\') {
+                        r += 1;
+                        if (r >= end) return Error.InvalidJSON;
+                        const esc = self.src[r];
+                        buf[w] = switch (esc) {
+                            '"' => '"',
+                            '\\' => '\\',
+                            '/' => '/',
+                            else => return Error.InvalidJSON,
+                        };
+                        w += 1;
+                        r += 1;
+                    } else {
+                        buf[w] = b;
+                        w += 1;
+                        r += 1;
                     }
-                    return buf[0..w];
                 }
+                return buf[0..w];
             } else if (c == '\\') {
-                has_escape = true;
-                self.pos += 1; // skip the escape char too on next iter increment
+                self.pos += 1;
                 if (self.pos >= self.src.len) return Error.InvalidJSON;
             }
         }
@@ -239,6 +250,13 @@ pub fn parseHeader(
     var tensor_list: std.ArrayList(Tensor) = .empty;
     var meta_list: std.ArrayList(MetadataEntry) = .empty;
 
+    // Pre-allocate based on a rough estimate of tensors-per-byte.
+    // Real safetensors entries are ~80-120 bytes each; estimate 1
+    // tensor per 100 bytes of header. Saves repeated grow+memcpy
+    // during the parse loop.
+    const estimated_tensors = @max(8, json.len / 100);
+    try tensor_list.ensureTotalCapacity(aa, estimated_tensors);
+
     cur.skipWhitespace();
     if (cur.peek() == @as(u8, '}')) {
         _ = cur.next();
@@ -258,14 +276,30 @@ pub fn parseHeader(
 
         cur.skipWhitespace();
         const sep = cur.next() orelse return Error.InvalidJSON;
-        if (sep == ',') continue;
+        if (sep == ',') {
+            @branchHint(.likely);
+            continue;
+        }
         if (sep == '}') break;
         return Error.InvalidJSON;
     }
 
-    // Sort + validate.
+    // Sort + validate. Fast-path: HF emits tensors in offset-increasing
+    // order, so we check first and skip the sort if already sorted.
     const tensors_owned = try tensor_list.toOwnedSlice(aa);
-    std.sort.pdq(Tensor, tensors_owned, {}, lessByStart);
+    var already_sorted = true;
+    {
+        var i: usize = 1;
+        while (i < tensors_owned.len) : (i += 1) {
+            if (tensors_owned[i - 1].data_offset_start > tensors_owned[i].data_offset_start) {
+                already_sorted = false;
+                break;
+            }
+        }
+    }
+    if (!already_sorted) {
+        std.sort.pdq(Tensor, tensors_owned, {}, lessByStart);
+    }
 
     var cursor: u64 = 0;
     for (tensors_owned) |t| {
@@ -301,16 +335,30 @@ fn parseTensorObject(cur: *Cursor, aa: std.mem.Allocator, name: []const u8) Pars
         const key = try cur.parseString(aa);
         try cur.expect(':');
 
-        if (std.mem.eql(u8, key, "dtype")) {
-            const s = try cur.parseString(aa);
-            dtype = DType.fromString(s) orelse return Error.UnknownDtype;
-        } else if (std.mem.eql(u8, key, "shape")) {
-            shape = try parseShape(cur, aa);
-        } else if (std.mem.eql(u8, key, "data_offsets")) {
-            const pair = try parseOffsetPair(cur);
-            off_start = pair[0];
-            off_end = pair[1];
-        } else {
+        // First-letter dispatch: avoid full std.mem.eql for the common
+        // {dtype, shape, data_offsets} keys.
+        var handled = false;
+        if (key.len > 0) {
+            const c0 = key[0];
+            if (c0 == 'd') {
+                if (key.len == 5 and key[1] == 't') {
+                    const s = try cur.parseString(aa);
+                    dtype = DType.fromString(s) orelse return Error.UnknownDtype;
+                    handled = true;
+                } else if (key.len == 12 and key[1] == 'a') {
+                    const pair = try parseOffsetPair(cur);
+                    off_start = pair[0];
+                    off_end = pair[1];
+                    handled = true;
+                }
+            } else if (c0 == 's') {
+                if (key.len == 5 and key[1] == 'h') {
+                    shape = try parseShape(cur, aa);
+                    handled = true;
+                }
+            }
+        }
+        if (!handled) {
             // Unknown key — skip its value (forward-compat).
             try cur.skipValue();
         }
