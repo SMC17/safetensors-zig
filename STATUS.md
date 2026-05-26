@@ -79,4 +79,4 @@
 6. Writer (safetensors output)
 7. Fuzz tests (malformed JSON / offsets / shapes)
 8. Cross-platform CI (macOS / Windows)
-9. Promote to v1.0 only after all the above land + 10x bench parity
+9. Promote to a 1.0-style release only after all the above land + 10x bench parity
