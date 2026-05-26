@@ -142,14 +142,6 @@ Requires Zig 0.16; the head-to-head bench additionally requires
   safetensors-zig is the Zig sibling at v0.3 (5x faster on the parse
   path for the Llama-shape fixture; not a writer).
 
-## Position in the portfolio
-
-safetensors-zig is artifact #4 in the 8-artifact portfolio (see
-`the broader sovereign-stack portfolio`). It is a foundation block — every Zig artifact
-that loads model weights (vLLM-zig, mlx-nonapple) will depend on this.
-
 ## Licence
 
-AGPL-3.0-or-later. See `LICENSE`. The dual-use implications of weight-
-loading code are limited; this exists at AGPL primarily for
-portfolio-coherence with the rest of the sovereign-stack OSS surface.
+AGPL-3.0-or-later. See `LICENSE`.
