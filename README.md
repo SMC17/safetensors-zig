@@ -44,8 +44,8 @@ integration tests pass. Output byte-identical to the Python
   architectural win (no AST + format-specialised) is hardware-
   invariant; absolute numbers vary across hardware.
 
-This is a pre-1.0 substrate per the Zig 0.16 ecosystem convention. No
-"production-grade" / "v1.0" / "stable" claims will be made.
+This is a pre-1.0 substrate per the Zig 0.16 ecosystem convention. Claims stay
+below release-readiness language until the evidence changes.
 
 ## What it does
 
@@ -138,7 +138,7 @@ Requires Zig 0.16; the head-to-head bench additionally requires
 ## Comparable upstream
 
 - [`huggingface/safetensors`](https://github.com/huggingface/safetensors)
-  — the canonical Rust + Python implementation. Production-grade.
+  — the canonical Rust + Python implementation, widely deployed upstream.
   safetensors-zig is the Zig sibling at v0.3 (5x faster on the parse
   path for the Llama-shape fixture; not a writer).
 
