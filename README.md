@@ -36,9 +36,7 @@ integration tests pass. Output byte-identical to the Python
 
 **Honest non-claims for v0.3:**
 - **5x is not 10x.** The OoM-better-than-Meta-OSS bar is 10x; v0.3
-  is at 5x. v0.4 path: real SIMD JSON structural scan (simdjson-style;
-  1-2 weeks of careful SWAR + AVX work) + two-pass parse +
-  canonical-order fast path.
+  is at 5x. The gap to 10x exists; closing it is not a roadmap commitment.
 - The fast parser accepts canonical safetensors + `\"` and `\\`
   escapes only. Tensor names with weirder Unicode escapes (`ÿ`)
   return InvalidJSON. Real safetensors files don't use these.
@@ -63,8 +61,8 @@ below release-readiness language until the evidence changes.
 ## What it does not do (yet)
 
 - Memory-mapped tensor views (current path goes through `pread` /
-  `readAll`; mmap planned for v0.2)
-- Reverse direction (writing safetensors files) — read-only at v0.1
+  `readAll`)
+- Reverse direction (writing safetensors files) — read-only
 - Big-endian host targets (LE assumed; portable big-endian needs
   shape/data byte-swap on read; deferred until requested)
 - Tensor dtype-typed views (f32 slice, etc.) — caller currently
