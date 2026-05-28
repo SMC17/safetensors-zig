@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "safetensors-zig: Pure-Zig HuggingFace safetensors reader"
+abstract: "Hand-tuned safetensors parser, ~5x faster than the HF Rust upstream on Llama-shape fixtures. SIMD byte-class scan + arena allocation. AGPL-3.0."
+authors:
+  - family-names: Collins
+    given-names: Sean
+    email: sean@sunlitmoon.online
+    affiliation: independent
+url: "https://github.com/SMC17/safetensors-zig"
+repository-code: "https://github.com/SMC17/safetensors-zig"
+version: "0.3.0"
+date-released: "2026-05-22"
+license: AGPL-3.0-or-later
+keywords:
+  - zig
+  - safetensors
+  - huggingface
+  - ml-infra
+  - simd
