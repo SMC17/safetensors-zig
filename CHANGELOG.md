@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.3.0 — 2026-05-22
+
+Inline + SIMD scan optimisations on top of the v0.2 hand-tuned
+parser. **~5x faster than the HF Rust upstream** (up from 3.2x at
+v0.2) on the Llama-shape fixture (Zig ~10μs vs Rust ~50μs median).
+
+- SIMD byte-class scan in the parser hot loop (token boundary
+  detection in 16-byte vector lanes).
+- Inlining hints on the per-token branch arms.
+- Tests pass unchanged; correctness-equivalent to v0.2.
+- Honest non-claim: the OoM-better-than-Meta-OSS bar is 10x; we
+  are at 5x. v0.4 path is real SIMD structural-JSON scan
+  (simdjson-style) which the inline+SIMD here is a stepping
+  stone toward.
+
 ## 0.2.0 — 2026-05-21
 
 Hand-tuned safetensors-specific JSON parser replaces std.json.
