@@ -1,5 +1,10 @@
 # safetensors-zig
 
+[![CI](https://github.com/SMC17/safetensors-zig/actions/workflows/ci.yml/badge.svg)](https://github.com/SMC17/safetensors-zig/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/SMC17/safetensors-zig?sort=semver)](https://github.com/SMC17/safetensors-zig/releases)
+[![License: AGPL-3.0-or-later](https://img.shields.io/badge/License-AGPL--3.0--or--later-blue.svg)](LICENSE)
+[![Zig](https://img.shields.io/badge/Zig-0.16-orange.svg)](https://ziglang.org/)
+
 A Zig 0.16 reader for the
 [HuggingFace safetensors](https://github.com/huggingface/safetensors)
 tensor serialisation format. Pure-Zig, single-module, no system deps.
