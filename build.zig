@@ -116,4 +116,21 @@ pub fn build(b: *std.Build) void {
     run_bench_bd.has_side_effects = true;
     const bench_bd_step = b.step("bench-breakdown", "Profile-style breakdown of parse phases");
     bench_bd_step.dependOn(&run_bench_bd.step);
+
+    // Real TinyLlama-1.1B 2.2GB parse bench — head-to-head with HF
+    // safetensors warm-cache 1.0 ms reference measured 2026-05-28.
+    const bench_real_tl_mod = b.createModule(.{
+        .root_source_file = b.path("bench/bench_real_tinyllama.zig"),
+        .target = target,
+        .optimize = .ReleaseFast,
+    });
+    bench_real_tl_mod.addImport("safetensors", mod);
+    const bench_real_tl_exe = b.addExecutable(.{
+        .name = "bench-real-tinyllama",
+        .root_module = bench_real_tl_mod,
+    });
+    const run_bench_real_tl = b.addRunArtifact(bench_real_tl_exe);
+    run_bench_real_tl.has_side_effects = true;
+    const bench_real_tl_step = b.step("bench-real-tinyllama", "Bench parse against real TinyLlama-1.1B 2.2GB fixture");
+    bench_real_tl_step.dependOn(&run_bench_real_tl.step);
 }
