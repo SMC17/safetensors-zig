@@ -63,6 +63,11 @@ pub fn build(b: *std.Build) void {
         .name = "safetensors-inspect",
         .root_module = inspect_mod,
     });
+    
+    if (optimize != .Debug) {
+        inspect_exe.root_module.strip = true;
+    }
+
     b.installArtifact(inspect_exe);
     const run_inspect = b.addRunArtifact(inspect_exe);
     if (b.args) |args| run_inspect.addArgs(args);
