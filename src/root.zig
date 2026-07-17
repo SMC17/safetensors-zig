@@ -48,7 +48,7 @@ pub const max_header_bytes: u64 = 100 * 1024 * 1024;
 /// (BOOL, U8, I8, F8_E5M2, F8_E4M3, U16, I16, F16, BF16, U32, I32, F32,
 /// U64, I64, F64).
 pub const DType = enum {
-    @"bool",
+    bool,
     u8,
     i8,
     f8_e5m2,
@@ -67,7 +67,7 @@ pub const DType = enum {
     pub fn fromString(s: []const u8) ?DType {
         const Pair = struct { name: []const u8, dtype: DType };
         const table = [_]Pair{
-            .{ .name = "BOOL", .dtype = .@"bool" },
+            .{ .name = "BOOL", .dtype = .bool },
             .{ .name = "U8", .dtype = .u8 },
             .{ .name = "I8", .dtype = .i8 },
             .{ .name = "F8_E5M2", .dtype = .f8_e5m2 },
@@ -91,7 +91,7 @@ pub const DType = enum {
 
     pub fn toString(self: DType) []const u8 {
         return switch (self) {
-            .@"bool" => "BOOL",
+            .bool => "BOOL",
             .u8 => "U8",
             .i8 => "I8",
             .f8_e5m2 => "F8_E5M2",
@@ -111,7 +111,7 @@ pub const DType = enum {
 
     pub fn byteSize(self: DType) usize {
         return switch (self) {
-            .@"bool", .u8, .i8, .f8_e5m2, .f8_e4m3 => 1,
+            .bool, .u8, .i8, .f8_e5m2, .f8_e4m3 => 1,
             .u16, .i16, .f16, .bf16 => 2,
             .u32, .i32, .f32 => 4,
             .u64, .i64, .f64 => 8,
@@ -369,7 +369,7 @@ test "DType.fromString round-trip" {
 }
 
 test "DType.byteSize covers every variant" {
-    try testing.expectEqual(@as(usize, 1), DType.@"bool".byteSize());
+    try testing.expectEqual(@as(usize, 1), DType.bool.byteSize());
     try testing.expectEqual(@as(usize, 1), DType.u8.byteSize());
     try testing.expectEqual(@as(usize, 1), DType.f8_e5m2.byteSize());
     try testing.expectEqual(@as(usize, 2), DType.f16.byteSize());

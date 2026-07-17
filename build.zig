@@ -63,7 +63,7 @@ pub fn build(b: *std.Build) void {
         .name = "safetensors-inspect",
         .root_module = inspect_mod,
     });
-    
+
     if (optimize != .Debug) {
         inspect_exe.root_module.strip = true;
     }
