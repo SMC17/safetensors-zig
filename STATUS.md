@@ -1,3 +1,15 @@
+# Current task evidence
+
+The original 128-byte inspector task covers one F32 schema plus six refusal
+cases. The local unit baseline is 19 passed and two optional model skips.
+Historical Rust speed ratios and real-model parity were not rerun; they are
+not current claims. The native working-pack evidence is not a release cut.
+Existing green-CI/operator requirements for release remain in AGENTS.md.
+
+The sections below preserve implementation history and original measurements.
+
+---
+
 # STATUS
 
 **Version:** v0.3
@@ -54,10 +66,8 @@
 
 ## Honest non-claims (v0.3-current)
 
-- **Beats Rust by 5x, not 10x.** The OoM-better-than-Meta-OSS bar
-  is 10x; v0.3 is at 5x. v0.4 path: real SIMD JSON structural scan
-  (simdjson-style), two-pass parse (count then alloc), assume
-  canonical HF key order for fast path.
+- Historical speed claims need a matched-harness rerun. The v0.4 parsing
+  ideas below are prospective and are not new measurements.
 - **v0.3 fixture is Llama-shape, not Llama-sized.** Synthetic 33MB
   fixture for the bench; real TinyLlama-1.1B (2.2GB) tested
   separately in `tests/test_realtinyllama.zig`.
@@ -69,8 +79,7 @@
 
 ## What is open for v0.4
 
-1. SIMD JSON structural scan (simdjson-style; 1-2 weeks of careful
-   SWAR + AVX work to push from 5x toward 10x vs Rust)
+1. Evaluate SIMD JSON structural scanning in a matched benchmark harness.
 2. Two-pass parse: count tensors first, allocate once, then fill
 3. Canonical-order fast path: assume HF emits keys in
    {dtype, shape, data_offsets} order, skip key matching entirely
