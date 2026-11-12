@@ -4,6 +4,9 @@
     .fingerprint = 0x280b3d48624f678d,
     .minimum_zig_version = "0.16.0",
     .paths = .{
+        "scripts",
+        "tools",
+        "selfserve.json",
         "src",
         "examples",
         "bench",
