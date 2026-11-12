@@ -13,8 +13,29 @@ tensor serialisation format. Pure-Zig, single-module, no system deps.
 
 ## Status
 
-**v0.3 — hand-tuned parser + inline + SIMD scan. ~5x faster than the
-HF Rust upstream.**
+**Reader prototype.** The current small task and historical benchmark record
+are described separately below. Historical speed ratios have not been rerun
+on the current host and are not current performance claims.
+
+## One original-input task
+
+```sh
+zig build test --summary all
+zig build -Doptimize=ReleaseSafe
+python3 scripts/verify_inspect_task.py
+```
+
+The task inspects a 128-byte original fixture with one two-element F32 tensor
+and metadata, then requires six malformed/missing-input cases to fail cleanly.
+No real model weights are downloaded. Current local unit baseline: 19 pass,
+two optional model tests skipped. This does not revalidate those real models.
+
+Create a private working source/executable/log pack with
+`python3 tools/selfserve.py selfserve.json --repo . --out /tmp/safetensors-task`.
+This is acceptance evidence, not a release cut. Green CI and operator intent
+remain required before release.
+
+## Historical benchmark record (not remeasured)
 
 | Implementation | ns/parse (median, 5+ runs) | parses/sec | ratio |
 |---|---|---|---|
@@ -32,22 +53,16 @@ The v0.3 parser is the v0.2 single-pass hand-tuned parser plus:
 - Sort-skip fast-path (HF emits offset-increasing; sort is typically
   skipped)
 
-Correctness-equivalent to v0.0.1: 17 unit tests + 3 real-model
-integration tests pass. Output byte-identical to the Python
-`safetensors` package.
+The old correctness/parity claims require their own recorded inputs and rerun.
+The current tiny task checks schema inspection and refusal behavior only.
 
-**Honest non-claims for v0.3:**
-- **5x is not 10x.** The OoM-better-than-Meta-OSS bar is 10x; v0.3
-  is at 5x. The gap to 10x exists; closing it is not a roadmap commitment.
-- The fast parser accepts canonical safetensors + `\"` and `\\`
-  escapes only. Tensor names with weirder Unicode escapes (`ÿ`)
-  return InvalidJSON. Real safetensors files don't use these.
-- The Rust crate does the same dtype/shape/offset validation we do.
-  The 5x is a fair head-to-head: same fixture, same correctness
-  checks, same output structure. No tricks.
-- Consumer-Linux numbers (Ryzen-class CPU, single core). The
-  architectural win (no AST + format-specialised) is hardware-
-  invariant; absolute numbers vary across hardware.
+**Current evidence boundaries:**
+- The historical ratio column needs reconciliation with the displayed timings
+  and a matched baseline/hardware rerun. No 5x claim is validated by this task.
+- Unicode/escape and full upstream compatibility require their own parity
+  fixtures. The original ASCII fixture does not establish those properties.
+- Large-model behavior, throughput and architecture-wide speedups are separate
+  measurements. No hardware-invariant speed claim is made here.
 
 This is a pre-1.0 substrate per the Zig 0.16 ecosystem convention. Claims stay
 below release-readiness language until the evidence changes.
@@ -144,8 +159,8 @@ Requires Zig 0.16; the head-to-head bench additionally requires
 
 - [`huggingface/safetensors`](https://github.com/huggingface/safetensors)
   — the canonical Rust + Python implementation, widely deployed upstream.
-  safetensors-zig is the Zig sibling at v0.3 (5x faster on the parse
-  path for the Llama-shape fixture; not a writer).
+  The current Zig task checks a tiny original header and refusal behavior.
+  A current speed or full-compatibility comparison requires a matched rerun.
 
 ## Licence
 
