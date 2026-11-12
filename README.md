@@ -159,8 +159,8 @@ Requires Zig 0.16; the head-to-head bench additionally requires
 
 - [`huggingface/safetensors`](https://github.com/huggingface/safetensors)
   — the canonical Rust + Python implementation, widely deployed upstream.
-  safetensors-zig is the Zig sibling at v0.3 (5x faster on the parse
-  path for the Llama-shape fixture; not a writer).
+  The current Zig task checks a tiny original header and refusal behavior.
+  A current speed or full-compatibility comparison requires a matched rerun.
 
 ## Licence
 

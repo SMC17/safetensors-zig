@@ -79,8 +79,7 @@ The sections below preserve implementation history and original measurements.
 
 ## What is open for v0.4
 
-1. SIMD JSON structural scan (simdjson-style; 1-2 weeks of careful
-   SWAR + AVX work to push from 5x toward 10x vs Rust)
+1. Evaluate SIMD JSON structural scanning in a matched benchmark harness.
 2. Two-pass parse: count tensors first, allocate once, then fill
 3. Canonical-order fast path: assume HF emits keys in
    {dtype, shape, data_offsets} order, skip key matching entirely
