@@ -13,3 +13,6 @@ __pycache__/
 .direnv/
 result
 result-*
+
+# Original tiny parser fixture; all real model files remain ignored.
+!tests/fixtures/original-two-f32.safetensors
