@@ -4,7 +4,7 @@ The original 128-byte inspector task covers one F32 schema plus six refusal
 cases. The local unit baseline is 19 passed and two optional model skips.
 Historical Rust speed ratios and real-model parity were not rerun; they are
 not current claims. The native working-pack evidence is not a release cut.
-Existing green-CI/operator requirements for release remain in AGENTS.md.
+Release requirements are in CONTRIBUTING.md.
 
 The sections below preserve implementation history and original measurements.
 
