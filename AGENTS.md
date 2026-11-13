@@ -32,6 +32,3 @@ zig build test --summary all
 
 Ask before release claims, large fixture commits, or format-writer design changes.
 
-## Hygiene
-
-Org templates: `SMC17/stax-hygiene`.

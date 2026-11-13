@@ -30,11 +30,6 @@ and metadata, then requires six malformed/missing-input cases to fail cleanly.
 No real model weights are downloaded. Current local unit baseline: 19 pass,
 two optional model tests skipped. This does not revalidate those real models.
 
-Create a private working source/executable/log pack with
-`python3 tools/selfserve.py selfserve.json --repo . --out /tmp/safetensors-task`.
-This is acceptance evidence, not a release cut. Green CI and operator intent
-remain required before release.
-
 ## Historical benchmark record (not remeasured)
 
 | Implementation | ns/parse (median, 5+ runs) | parses/sec | ratio |
@@ -173,6 +168,4 @@ nix develop        # Zig 0.16.0 + jq + curl + gawk + python3(websockets)
 zig build test     # 17/17 expected
 ```
 
-The repo's `flake.nix` pins exact dep versions (see `STATUS.md`).
-`scripts/checkpoint.sh` + `.githooks/post-commit` auto-regenerate
-`NEXT.md` after every commit (opt-in: `git config core.hooksPath .githooks`).
+The repo's `flake.nix` pins exact dependency versions for `nix develop`.
