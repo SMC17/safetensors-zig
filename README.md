@@ -1,7 +1,5 @@
 # safetensors-zig
 
-**`tier-1 reproducible substrate`** · `flake.nix` · `scripts/checkpoint.sh` · `.githooks/post-commit`
-
 [![CI](https://github.com/SMC17/safetensors-zig/actions/workflows/ci.yml/badge.svg)](https://github.com/SMC17/safetensors-zig/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/SMC17/safetensors-zig?sort=semver)](https://github.com/SMC17/safetensors-zig/releases)
 [![License: AGPL-3.0-or-later](https://img.shields.io/badge/License-AGPL--3.0--or--later-blue.svg)](LICENSE)
@@ -42,7 +40,7 @@ remain required before release.
 | safetensors-zig v0.0.1 (std.json, ReleaseFast) | ~85,000 | ~12,000 | 0.7x (slower) |
 | `huggingface/safetensors` 0.4.5 (Rust, release) | ~50,000 | ~20,000 | 1.00x (reference) |
 | safetensors-zig v0.2 (hand-tuned parser) | ~24,000 | ~42,000 | ~3.2x faster |
-| **safetensors-zig v0.3** (hand-tuned + inline + SIMD scan) | **~10,000** | **~100,000** | **~5.0x FASTER** |
+| safetensors-zig v0.3 (hand-tuned + inline + SIMD scan) | ~10,000 | ~100,000 | ~5.0x (unreconciled, see below) |
 
 The v0.3 parser is the v0.2 single-pass hand-tuned parser plus:
 - `std.ArrayList.ensureTotalCapacity` from header-size estimate
